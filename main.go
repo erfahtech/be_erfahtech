@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aiteung/atdb"
 	"github.com/whatsauth/watoken"
@@ -89,6 +90,7 @@ func InsertDevice(r *http.Request) string {
 	var Response Credential
 	var devicedata Device
 	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
 	err := json.NewDecoder(r.Body).Decode(&devicedata)
 	if err != nil {
 		Response.Message = "error parsing application/json: " + err.Error()
