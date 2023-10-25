@@ -88,13 +88,14 @@ func InsertUser(r *http.Request) string {
 func InsertDevice(r *http.Request) string {
 	var Response Credential
 	var devicedata Device
+	token := r.Header.Get("Authorization")
 	err := json.NewDecoder(r.Body).Decode(&devicedata)
 	if err != nil {
 		Response.Message = "error parsing application/json: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
 
-	user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", devicedata.User)
+	user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", token)
 	    if err != nil {
         Response.Message = "Error decoding token: " + err.Error()
         return GCFReturnStruct(Response)
