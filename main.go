@@ -112,3 +112,36 @@ func InsertDevice(r *http.Request) string {
 }
 
 
+// func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r string) string {
+    var Response DeviceResponse
+    Response.Status = false
+    mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
+
+    // Menyimpan token dari request
+    // token := r.Header.Get("Authorization")
+    token := r
+    token = strings.TrimPrefix(token, "Bearer ")
+
+    // Decode token untuk mendapatkan ID pengguna
+    user, err := watoken.Decode(os.Getenv(PASETOPRIVATEKEYENV), token)
+    if err != nil {
+        Response.Message = "Error decoding token: " + err.Error()
+    } else {
+        // Mengambil data perangkat berdasarkan ID pengguna
+        devices, err := GetDevicesByUserId(mconn, collectionname, user.Id)
+        if err != nil {
+            Response.Message = "Error fetching devices: " + err.Error()
+        } else {
+            Response.Status = true
+            Response.Message = "Device data successfully retrieved"
+            Response.Data = devices
+        }
+    }
+
+    return GCFReturnStruct(Response)
+}
+
+
+
+

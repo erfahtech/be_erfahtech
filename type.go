@@ -24,6 +24,12 @@ type Credential struct {
 	Message string `json:"message,omitempty" bson:"message,omitempty"`
 }
 
+type DeviceResponse struct {
+    Status  bool     `json:"status"`
+    Message string   `json:"message"`
+    Data    []Device `json:"data"`
+}
+
 // type Payload struct {
 // 	Id  string    `json:"id"`
 // 	Exp time.Time `json:"exp"`
