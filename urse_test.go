@@ -7,7 +7,12 @@ import (
 	"github.com/aiteung/atdb"
 	"github.com/whatsauth/watoken"
 	"go.mongodb.org/mongo-driver/bson"
+
+	model "github.com/erfahtech/be_erfahtech/model"
+	module "github.com/erfahtech/be_erfahtech/module"
 )
+
+var db = module.MongoConnect("MONGOSTRING", "db_urse")
 
 func TestGeneratePasswordHash(t *testing.T) {
 	password := "secret"
@@ -28,12 +33,12 @@ func TestGeneratePrivateKeyPaseto(t *testing.T) {
 }
 
 func TestHashFunction(t *testing.T) {
-	mconn := SetConnection("MONGOSTRING", "urse")
+	mconn := SetConnection("MONGOSTRING", "db_urse")
 	var userdata User
-	userdata.Username = "dito"
+	userdata.Email = "dito@gmail.com"
 	userdata.Password = "secret"
 
-	filter := bson.M{"username": userdata.Username}
+	filter := bson.M{"email": userdata.Email}
 	res := atdb.GetOneDoc[User](mconn, "user", filter)
 	fmt.Println("Mongo User Result: ", res)
 	hash, _ := HashPassword(userdata.Password)
@@ -44,14 +49,42 @@ func TestHashFunction(t *testing.T) {
 }
 
 func TestIsPasswordValid(t *testing.T) {
-	mconn := SetConnection("MONGOSTRING", "urse")
+	mconn := SetConnection("MONGOSTRING", "db_urse")
 	var userdata User
-	userdata.Username = "dani"
-	userdata.Password = "secretoo"
+	userdata.Email = "dito@gmail.com"
+	userdata.Password = "secret"
 
 	anu := IsPasswordValid(mconn, "user", userdata)
 	fmt.Println(anu)
 }
+
+func TestSignUp(t *testing.T) {
+	var doc model.User
+	doc.Username = "Erdito Nausha Adam"
+	doc.Email = "dito@gmail.com"
+	doc.Password = "secret"
+
+	err := module.SignUp(db, "user", doc)
+	if err != nil {
+		t.Errorf("Error inserting document: %v", err)
+	} else {
+		fmt.Println("Data berhasil disimpan dengan nama :", doc.Username)
+	}
+}
+
+func TestLogIn(t *testing.T) {
+	var doc model.User
+	doc.Email = "dito@gmail.com"
+	doc.Password = "secret"
+	user, Status, err := module.SignIn(db, "user", doc)
+	fmt.Println("Status :", Status)
+	if err != nil {
+		t.Errorf("Error getting document: %v", err)
+	} else {
+		fmt.Println("Selamat Datang :", user)
+	}
+}
+
 
 func TestInsertUser(*testing.T){
 	var userdata User 
@@ -65,6 +98,12 @@ func TestInsertUser(*testing.T){
 	fmt.Println(nama)
 }
 
+func TestGetAllUser(*testing.T){	
+	mconn := SetConnection("MONGOSTRING", "db_urse")	
+	user := GetAllUser(mconn, "user")
+	fmt.Println(user)
+}
+
 func TestInsertDevice(*testing.T){
 	var devicedata Device
 	mconn := SetConnection("MONGOSTRING", "db_urse")
@@ -74,6 +113,13 @@ func TestInsertDevice(*testing.T){
 	devicedata.User = token.Id
 	nama:=atdb.InsertOneDoc(mconn, "devices", devicedata)
 	fmt.Println(nama)
+}
+
+func TestGetDevicesByUserId(*testing.T){
+	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTEwLTI4VDEwOjQ3OjIyWiIsImlhdCI6IjIwMjMtMTAtMjhUMDg6NDc6MjJaIiwiaWQiOiJlcmZhaEBnbWFpbC5jb20iLCJuYmYiOiIyMDIzLTEwLTI4VDA4OjQ3OjIyWiJ9v03gBldT2n8kwUXzPSRHqFek1Oh2RKg7WkmIpP7caDSOOjRrCPQPpUIgM49Cghk6_igQe7DzAoi5gissUPnGDw")
+	mconn := SetConnection("MONGOSTRING", "db_urse")
+	devices,_:=GetDevicesByUserId(mconn, "devices", token.Id)
+	fmt.Println(devices)
 }
 
 

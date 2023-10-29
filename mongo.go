@@ -23,6 +23,11 @@ func IsPasswordValid(mongoconn *mongo.Database, collection string, userdata User
 	return CheckPasswordHash(userdata.Password, res.Password)
 }
 
+func GetAllUser(mongoconn *mongo.Database, collection string) []User {
+	user := atdb.GetAllDoc[[]User](mongoconn, collection)
+	return user
+}
+
 func GetDevicesByUserId(conn *mongo.Database, collectionname string, email string) ([]Device, error) {
     var devices []Device
     collection := conn.Collection(collectionname)

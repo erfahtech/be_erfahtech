@@ -69,6 +69,12 @@ func GCFPostHandler(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionn
 	return GCFReturnStruct(Response)
 }
 
+func GCFHandlerGetAll(MONGOCONNSTRINGENV, dbname, col string) string {
+	mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
+	data := GetAllUser(mconn, col)
+	return GCFReturnStruct(data)
+}
+
 
 func InsertUser(r *http.Request) string {
 	var Response Credential
@@ -86,7 +92,7 @@ func InsertUser(r *http.Request) string {
 	return GCFReturnStruct(Response)
 }
 
-func InsertDevice(r *http.Request) string {
+func InsertDevice(PASETOPUBLICKEYENV string, r *http.Request) string {
 	var Response Credential
 	var devicedata Device
 	token := r.Header.Get("Authorization")
@@ -97,7 +103,7 @@ func InsertDevice(r *http.Request) string {
 		return GCFReturnStruct(Response)
 	}
 
-	user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", token)
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 	    if err != nil {
         Response.Message = "Error decoding token: " + err.Error()
         return GCFReturnStruct(Response)
@@ -112,19 +118,21 @@ func InsertDevice(r *http.Request) string {
 }
 
 
-// func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r string) string {
+func GetDevices(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+// func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r string) string {
     var Response DeviceResponse
     Response.Status = false
     mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
 
     // Menyimpan token dari request
-    // token := r.Header.Get("Authorization")
-    token := r
-    token = strings.TrimPrefix(token, "Bearer ")
+    token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+
+    // token := r
+    // token = strings.TrimPrefix(token, "Bearer ")
 
     // Decode token untuk mendapatkan ID pengguna
-    user, err := watoken.Decode(os.Getenv(PASETOPRIVATEKEYENV), token)
+    user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
     if err != nil {
         Response.Message = "Error decoding token: " + err.Error()
     } else {
@@ -141,7 +149,3 @@ func GetDevices(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectionname 
 
     return GCFReturnStruct(Response)
 }
-
-
-
-
