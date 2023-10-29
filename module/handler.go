@@ -56,9 +56,34 @@ func GCFHandlerLogin(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collection
 	if err != nil {
 		Response.Message = "Gagal Encode Token : " + err.Error()
 	} else {
-		Response.Message = "Selamat Datang " + user.Email + " di USE" + strconv.FormatBool(status1)
+		Response.Message = "Selamat Datang " + user.Email + " di USE " + strconv.FormatBool(status1)
 		Response.Token = tokenstring
 	}
+	return GCFReturnStruct(Response)
+}
+
+func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+	var Response model.Credential
+	var devicedata model.Device
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	err := json.NewDecoder(r.Body).Decode(&devicedata)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	    if err != nil {
+        Response.Message = "Error decoding token: " + err.Error()
+        return GCFReturnStruct(Response)
+    }
+
+	devicedata.User = user.Id
+	InsertOneDoc(conn, "devices", devicedata)
+	Response.Status = true
+	Response.Message = "Device berhasil ditambahkan dengan nama: " + devicedata.Name
 	return GCFReturnStruct(Response)
 }
 
@@ -70,9 +95,6 @@ func GCFGetDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname
 		// Menyimpan token dari request
 		token := r.Header.Get("Authorization")
 		token = strings.TrimPrefix(token, "Bearer ")
-	
-		// token := r
-		// token = strings.TrimPrefix(token, "Bearer ")
 	
 		// Decode token untuk mendapatkan ID pengguna
 		user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)

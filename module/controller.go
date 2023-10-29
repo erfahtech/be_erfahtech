@@ -108,6 +108,7 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	// insertedDoc.Password = hash
 	user := bson.M{
 		"_id":      objectId,
+		"username": insertedDoc.Username,
 		"email":    insertedDoc.Email,
 		"password": hash,
 		// "role":     "user",
