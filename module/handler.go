@@ -9,6 +9,7 @@ import (
 
 	model "github.com/erfahtech/be_erfahtech/model"
 	"github.com/whatsauth/watoken"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GCFReturnStruct(DataStuct any) string {
@@ -62,6 +63,14 @@ func GCFHandlerLogin(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collection
 	return GCFReturnStruct(Response)
 }
 
+func GCFHandlerGetAll(MONGOCONNSTRINGENV, dbname, col string, docs interface{}) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	data := GetAllDocs(conn, col, docs)
+	return GCFReturnStruct(data)
+}
+
+//Device
+
 func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
 	var Response model.Credential
 	var devicedata model.Device
@@ -88,29 +97,52 @@ func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *h
 }
 
 func GCFGetDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-		var Response model.DeviceResponse
-		Response.Status = false
-		conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.DeviceResponse
+	Response.Status = false
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	
-		// Menyimpan token dari request
-		token := r.Header.Get("Authorization")
-		token = strings.TrimPrefix(token, "Bearer ")
+	// Menyimpan token dari request
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
 	
-		// Decode token untuk mendapatkan ID pengguna
-		user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	// Decode token untuk mendapatkan ID pengguna
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	if err != nil {
+		Response.Message = "Error decoding token: " + err.Error()
+	} else {
+		// Mengambil data perangkat berdasarkan ID pengguna
+		devices, err := GetDevicesByUser(conn, collectionname, user.Id)
 		if err != nil {
-			Response.Message = "Error decoding token: " + err.Error()
+			Response.Message = "Error fetching devices: " + err.Error()
 		} else {
-			// Mengambil data perangkat berdasarkan ID pengguna
-			devices, err := GetDevicesByUserId(conn, collectionname, user.Id)
-			if err != nil {
-				Response.Message = "Error fetching devices: " + err.Error()
-			} else {
-				Response.Status = true
-				Response.Message = "Device data successfully retrieved"
-				Response.Data = devices
-			}
+			Response.Status = true
+			Response.Message = "Device data successfully retrieved"
+			Response.Data = devices
 		}
+	}
 	
+	return GCFReturnStruct(Response)
+}
+
+func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	var userdata model.User
+	var Response model.DeviceResponse
+	Response.Status = false
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	filter := bson.M{"user": userdata.Email}
+
+	devices, err := GetDocsByFilter(conn, collectionname, filter)
+	if err != nil {
+		var Response model.Credential
+		Response.Status = false
+		Response.Message = "Error fetching devices: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
+	return GCFReturnStruct(devices)
+}
+
+
+
+		
+	
+		

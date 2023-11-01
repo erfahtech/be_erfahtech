@@ -11,6 +11,7 @@ import (
 
 	"strings"
 
+	"github.com/aiteung/atdb"
 	"github.com/badoux/checkmail"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,6 +24,20 @@ import (
 
 	model "github.com/erfahtech/be_erfahtech/model"
 )
+
+func SetConnection(MONGOCONNSTRINGENV, dbname string) *mongo.Database {
+	var DBmongoinfo = atdb.DBInfo{
+		DBString: os.Getenv(MONGOCONNSTRINGENV),
+		DBName:   dbname,
+	}
+	return atdb.MongoConnect(DBmongoinfo)
+}
+
+func IsPasswordValid(mongoconn *mongo.Database, collection string, userdata model.User) bool {
+	filter := bson.M{"email": userdata.Email}
+	res := atdb.GetOneDoc[model.User](mongoconn, collection, filter)
+	return CheckPasswordHash(userdata.Password, res.Password)
+}
 
 func MongoConnect(MongoString, dbname string) *mongo.Database {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv(MongoString)))
@@ -84,6 +99,34 @@ func DeleteOneDoc(_id primitive.ObjectID, db *mongo.Database, col string) error 
 	return nil
 }
 
+func GetDocsByFilter(db *mongo.Database, collectionName string, filter bson.M) ([]bson.M, error) {
+    var documents []bson.M
+
+    ctx := context.TODO()
+	collection := db.Collection(collectionName)
+
+    cursor, err := collection.Find(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    for cursor.Next(ctx) {
+        var document bson.M
+        if err := cursor.Decode(&document); err != nil {
+            return nil, err
+        }
+        documents = append(documents, document)
+    }
+
+    if err := cursor.Err(); err != nil {
+        return nil, err
+    }
+
+    return documents, nil
+}
+
+//User
 func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	objectId := primitive.NewObjectID()
 
@@ -138,6 +181,11 @@ func SignIn(db *mongo.Database, col string, insertedDoc model.User) (user model.
 	return existsDoc, true, nil
 }
 
+func GetAllUser(mongoconn *mongo.Database, collection string) []model.User {
+	user := atdb.GetAllDoc[[]model.User](mongoconn, collection)
+	return user
+}
+
 func GetUserFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.User, err error) {
 	collection := db.Collection("user")
 	filter := bson.M{"_id": _id}
@@ -164,7 +212,13 @@ func GetUserFromEmail(email string, db *mongo.Database) (doc model.User, err err
 	return doc, nil
 }
 
-func GetDevicesByUserId(conn *mongo.Database, collectionname string, email string) ([]model.Device, error) {
+//Device
+func GetAllDevice(mongoconn *mongo.Database, collection string) []model.Device {
+	device := atdb.GetAllDoc[[]model.Device](mongoconn, collection)
+	return device
+}
+
+func GetDevicesByUser(conn *mongo.Database, collectionname string, email string) ([]model.Device, error) {
 	var devices []model.Device
 	collection := conn.Collection(collectionname)
 
