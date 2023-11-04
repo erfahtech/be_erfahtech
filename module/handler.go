@@ -217,14 +217,9 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		return GCFReturnStruct(Response)
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&dataDevice)
+	err := DeleteDevice(conn, dataDevice)
 	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-	err = DeleteDevice(conn, dataDevice)
-	if err != nil {
-		Response.Message = "error parsing application/json4: " + err.Error()
+		Response.Message = "error deleting device: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
 	Response.Status = true
