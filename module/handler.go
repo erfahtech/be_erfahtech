@@ -213,8 +213,4 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	Response.Status = true
 	Response.Message = "Device berhasil dihapus"
 	return GCFReturnStruct(Response)
-}
-
-		
-	
-		
+}		
