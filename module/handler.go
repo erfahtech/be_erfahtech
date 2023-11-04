@@ -144,6 +144,7 @@ func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *h
 func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.DeviceResponse
+	var devicedata model.Device
 	Response.Status = false
 	var dataDevice model.Device
 
@@ -156,7 +157,7 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	}
 
 	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+	user, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
 
 	if err1 != nil {
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
@@ -173,6 +174,7 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		Response.Message = "error parsing application/json4: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
+	devicedata.User = user.Id
 	Response.Status = true
 	Response.Message = "Device berhasil diupdate"
 	return GCFReturnStruct(Response)

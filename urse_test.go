@@ -139,10 +139,12 @@ func TestGetDevicesByEmail(*testing.T){
 }
 
 func TestUpdateDevice(t *testing.T) {
+	user,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTA0VDA3OjQyOjU5WiIsImlhdCI6IjIwMjMtMTEtMDRUMDU6NDI6NTlaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMDRUMDU6NDI6NTlaIn1nAaEIarEleWlY2-Q40BYeHRXJzvyk9qnKFi1xjLtFqRoTrveB-MaS5UCwyMlppZM3hwCiVmyE9cYc128lBEQD")
 	var doc model.Device
-	doc.Name = "Lampu @2"
-	doc.Topic = "taman/lampu"
-	id, err := primitive.ObjectIDFromHex("654371b27567fa6d8283f344")
+	doc.Name = "Ac @2"
+	doc.Topic = "kamar/ac@2"
+	doc.User = user.Id
+	id, err := primitive.ObjectIDFromHex("6543b1f219d472b85816dad8")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil diubah dengan id")
@@ -160,7 +162,7 @@ func TestUpdateDevice(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	var doc model.Device
-	id, err := primitive.ObjectIDFromHex("654371b27567fa6d8283f344")
+	id, err := primitive.ObjectIDFromHex("6545b7461dde927263a00ccd")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil dihapus dengan id : ")
