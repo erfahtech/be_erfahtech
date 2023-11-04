@@ -18,6 +18,10 @@ func GCFReturnStruct(DataStuct any) string {
 	return string(jsondata)
 }
 
+func GetID(r *http.Request) string {
+    return r.URL.Query().Get("id")
+}
+
 func GCFHandlerSignup(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.Credential
@@ -149,11 +153,18 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	var dataDevice model.Device
 
 	// Get the "id" parameter from the URL
-    id := r.URL.Query().Get("id")
+	id := GetID(r)
     if id == "" {
         Response.Message = "Missing 'id' parameter in the URL"
         GCFReturnStruct(Response)
     }
+
+	// Convert the ID string to primitive.ObjectID
+	idparam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		Response.Message = "Invalid id parameter"
+		GCFReturnStruct(Response)
+	}
 
 	// get token from header
 	token := r.Header.Get("Authorization")
@@ -174,12 +185,12 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	// Set the user ID in dataDevice
 	dataDevice.User = user.Id // Assuming "UserID" is the field where you want to store the user ID in dataDevice
 
-	err := json.NewDecoder(r.Body).Decode(&dataDevice)
+	err = json.NewDecoder(r.Body).Decode(&dataDevice)
 	if err != nil {
 		Response.Message = "error parsing application/json3: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	err = UpdateDevice(conn, dataDevice)
+	err = UpdateDeviceByID(idparam, conn, dataDevice)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
 		return GCFReturnStruct(Response)
@@ -191,7 +202,7 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 
 func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var Response model.DeviceResponse
+	var Response model.Response
 	Response.Status = false
 
 	// Get the "id" parameter from the URL
@@ -234,8 +245,4 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	Response.Status = true
 	Response.Message = "Device berhasil dihapus"
 	return GCFReturnStruct(Response)
-}
-
-func GetID(r *http.Request) string {
-    return r.URL.Query().Get("id")
 }

@@ -29,3 +29,8 @@ type DeviceResponse struct {
     Message string   `json:"message"`
     Data    []Device `json:"data"`
 }
+
+type Response struct {
+	Status  bool   `json:"status"`
+	Message string `json:"message"`
+}

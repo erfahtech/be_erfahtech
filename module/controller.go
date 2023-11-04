@@ -243,17 +243,17 @@ func GetDevicesByUser(conn *mongo.Database, collectionname string, email string)
 	return devices, nil
 }
 
-func UpdateDevice(db *mongo.Database, doc model.Device) (err error) {
-	filter := bson.M{"_id": doc.ID}
+func UpdateDeviceByID(id primitive.ObjectID, db *mongo.Database, doc model.Device) error {
+	filter := bson.M{"_id": id}
 	result, err := db.Collection("devices").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
 	if err != nil {
-		fmt.Printf("UpdateDevice: %v\n", err)
-		return
+		return fmt.Errorf("error updating data for ID %s: %s", id, err.Error())
 	}
+
 	if result.ModifiedCount == 0 {
-		err = errors.New("no data has been changed with the specified id")
-		return
-	}
+        return errors.New("no data has been changed with the specified id")
+    }
+
 	return nil
 }
 

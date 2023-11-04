@@ -139,26 +139,32 @@ func TestGetDevicesByEmail(*testing.T){
 }
 
 func TestUpdateDevice(t *testing.T) {
-	user,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTA0VDA3OjQyOjU5WiIsImlhdCI6IjIwMjMtMTEtMDRUMDU6NDI6NTlaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMDRUMDU6NDI6NTlaIn1nAaEIarEleWlY2-Q40BYeHRXJzvyk9qnKFi1xjLtFqRoTrveB-MaS5UCwyMlppZM3hwCiVmyE9cYc128lBEQD")
-	var doc model.Device
-	doc.Name = "Ac @2"
-	doc.Topic = "kamar/ac@2"
-	doc.User = user.Id
-	id, err := primitive.ObjectIDFromHex("6543b1f219d472b85816dad8")
-	doc.ID = id
-	if err != nil {
-		fmt.Printf("Data tidak berhasil diubah dengan id")
-	} else {
+    user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", "v4.public.eyJleHAiOiIyMDIzLTExLTA0VDEwOjQzOjAxWiIsImlhdCI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIn3ErasDBJ8ZPB0cronqu5S2WqSJ7fyy1YHXM2ovx_B8hrLfekxMtxCDCze8onBf8E02puRACVmq-P8wrxR1X9cC")
+    if err != nil {
+        t.Errorf("Error decoding token: %v", err)
+        return
+    }
 
-		err = module.UpdateDevice(db, doc)
-		if err != nil {
-			t.Errorf("Error updateting document: %v", err)
-		} else {
-			fmt.Println("Data berhasil diubah dengan id :", doc.ID)
-		}
-	}
+    var doc model.Device
+    doc.Name = "Ac @4"
+    doc.Topic = "kamar/ac@4"
+    doc.User = user.Id
 
+    id, err := primitive.ObjectIDFromHex("6543b1f219d472b85816dad8")
+    doc.ID = id
+    if err != nil {
+        t.Errorf("Error converting ID: %v", err)
+        return
+    }
+
+    err = module.UpdateDeviceByID(id, db, doc)
+    if err != nil {
+        t.Errorf("Error updating document: %v", err)
+    } else {
+        fmt.Println("Data berhasil diubah dengan ID:", doc.ID)
+    }
 }
+
 
 func TestDelete(t *testing.T) {
 	var doc model.Device
