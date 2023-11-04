@@ -144,9 +144,15 @@ func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *h
 func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.DeviceResponse
-	var devicedata model.Device
 	Response.Status = false
 	var dataDevice model.Device
+
+	// Get the "id" parameter from the URL
+    id := r.URL.Query().Get("id")
+    if id == "" {
+        Response.Message = "Missing 'id' parameter in the URL"
+        GCFReturnStruct(Response)
+    }
 
 	// get token from header
 	token := r.Header.Get("Authorization")
@@ -164,6 +170,9 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		return GCFReturnStruct(Response)
 	}
 
+	// Set the user ID in dataDevice
+	dataDevice.User = user.Id // Assuming "UserID" is the field where you want to store the user ID in dataDevice
+
 	err := json.NewDecoder(r.Body).Decode(&dataDevice)
 	if err != nil {
 		Response.Message = "error parsing application/json3: " + err.Error()
@@ -174,7 +183,6 @@ func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		Response.Message = "error parsing application/json4: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	devicedata.User = user.Id
 	Response.Status = true
 	Response.Message = "Device berhasil diupdate"
 	return GCFReturnStruct(Response)
@@ -185,6 +193,13 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	var Response model.DeviceResponse
 	Response.Status = false
 	var dataDevice model.Device
+
+	// Get the "id" parameter from the URL
+    id := r.URL.Query().Get("id")
+    if id == "" {
+        Response.Message = "Missing 'id' parameter in the URL"
+        GCFReturnStruct(Response)
+    }
 
 	// get token from header
 	token := r.Header.Get("Authorization")
