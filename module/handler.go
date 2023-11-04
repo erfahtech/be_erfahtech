@@ -10,6 +10,7 @@ import (
 	model "github.com/erfahtech/be_erfahtech/model"
 	"github.com/whatsauth/watoken"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GCFReturnStruct(DataStuct any) string {
@@ -192,16 +193,22 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.DeviceResponse
 	Response.Status = false
-	var dataDevice model.Device
 
 	// Get the "id" parameter from the URL
-    id := r.URL.Query().Get("id")
-    if id == "" {
-        Response.Message = "Missing 'id' parameter in the URL"
-        GCFReturnStruct(Response)
-    }
+	id := GetID(r)
+	if id == "" {
+		Response.Message = "Missing 'id' parameter in the URL"
+		return GCFReturnStruct(Response)
+	}
 
-	// get token from header
+	// Convert the ID string to primitive.ObjectID
+	idparam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		Response.Message = "Invalid id parameter"
+		GCFReturnStruct(Response)
+	}
+
+	// Get token from header
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
 	if token == "" {
@@ -209,7 +216,7 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		return GCFReturnStruct(Response)
 	}
 
-	// decode token
+	// Decode token
 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
 
 	if err1 != nil {
@@ -217,12 +224,18 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		return GCFReturnStruct(Response)
 	}
 
-	err := DeleteDevice(conn, dataDevice)
+	// Delete the device based on the ID
+	err = DeleteDeviceByID(idparam, conn)
 	if err != nil {
 		Response.Message = "error deleting device: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
+
 	Response.Status = true
 	Response.Message = "Device berhasil dihapus"
 	return GCFReturnStruct(Response)
-}		
+}
+
+func GetID(r *http.Request) string {
+    return r.URL.Query().Get("id")
+}

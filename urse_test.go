@@ -162,12 +162,13 @@ func TestUpdateDevice(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	var doc model.Device
-	id, err := primitive.ObjectIDFromHex("6545b7461dde927263a00ccd")
+	conn := module.SetConnection("MONGOSTRING", "db_urse")
+	id, err := primitive.ObjectIDFromHex("65439fa2aa2593eebaa09e88")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil dihapus dengan id : ")
 	} else {
-		err = module.DeleteDevice(db, doc)
+		err = module.DeleteDeviceByID(id, conn)
 		if err != nil {
 			t.Errorf("Error updating document: %v", err)
 		} else {

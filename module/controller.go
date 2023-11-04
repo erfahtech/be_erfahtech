@@ -257,16 +257,16 @@ func UpdateDevice(db *mongo.Database, doc model.Device) (err error) {
 	return nil
 }
 
-func DeleteDevice(db *mongo.Database, doc model.Device) error {
-	collection := *db.Collection("devices")
-	filter := bson.M{"_id": doc.ID}
+func DeleteDeviceByID(id primitive.ObjectID, db *mongo.Database) error {
+	collection := db.Collection("devices")
+	filter := bson.M{"_id": id}
 	result, err := collection.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+		return fmt.Errorf("error deleting data for ID %s: %s", id, err.Error())
 	}
 
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("data with ID %s not found", doc.ID)
+		return fmt.Errorf("data with ID %s not found", id)
 	}
 
 	return nil
