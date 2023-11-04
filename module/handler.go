@@ -141,7 +141,79 @@ func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *h
 	return GCFReturnStruct(devices)
 }
 
+func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.DeviceResponse
+	Response.Status = false
+	var dataDevice model.Device
 
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:"
+		return GCFReturnStruct(Response)
+	}
+
+	// decode token
+	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+		return GCFReturnStruct(Response)
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	err = UpdateDevice(conn, dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Device berhasil diupdate"
+	return GCFReturnStruct(Response)
+}
+
+func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.DeviceResponse
+	Response.Status = false
+	var dataDevice model.Device
+
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:"
+		return GCFReturnStruct(Response)
+	}
+
+	// decode token
+	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+		return GCFReturnStruct(Response)
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	err = DeleteDevice(conn, dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Device berhasil dihapus"
+	return GCFReturnStruct(Response)
+}
 
 		
 	
