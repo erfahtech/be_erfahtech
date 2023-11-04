@@ -7,8 +7,8 @@ import (
 type User struct {
 	ID    primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Username string `json:"username" bson:"username"`
-	Password string `json:"password" bson:"password"`
 	Email    string `json:"Email" bson:"email"`
+	Password string `json:"password" bson:"password"`
 	// Role     string `json:"role,omitempty" bson:"role,omitempty"`
 }
 type Device struct {

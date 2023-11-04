@@ -10,6 +10,7 @@ import (
 
 	model "github.com/erfahtech/be_erfahtech/model"
 	module "github.com/erfahtech/be_erfahtech/module"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var db = module.MongoConnect("MONGOSTRING", "db_urse")
@@ -135,4 +136,40 @@ func TestGetDevicesByEmail(*testing.T){
 	filter := bson.M{"user": userdata.Email}
 	devices,_:=module.GetDocsByFilter(mconn, "devices", filter)
 	fmt.Println(devices)
+}
+
+func TestUpdateDevice(t *testing.T) {
+	var doc model.Device
+	doc.Name = "Lampu @2"
+	doc.Topic = "taman/lampu"
+	id, err := primitive.ObjectIDFromHex("654371b27567fa6d8283f344")
+	doc.ID = id
+	if err != nil {
+		fmt.Printf("Data tidak berhasil diubah dengan id")
+	} else {
+
+		err = module.UpdateDevice(db, doc)
+		if err != nil {
+			t.Errorf("Error updateting document: %v", err)
+		} else {
+			fmt.Println("Data berhasil diubah dengan id :", doc.ID)
+		}
+	}
+
+}
+
+func TestDelete(t *testing.T) {
+	var doc model.Device
+	id, err := primitive.ObjectIDFromHex("654371b27567fa6d8283f344")
+	doc.ID = id
+	if err != nil {
+		fmt.Printf("Data tidak berhasil dihapus dengan id : ")
+	} else {
+		err = module.DeleteDevice(db, doc)
+		if err != nil {
+			t.Errorf("Error updating document: %v", err)
+		} else {
+			fmt.Println("Data berhasil dihapus dengan id : ", doc.ID)
+		}
+	}
 }
