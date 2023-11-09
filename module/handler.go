@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	model "github.com/erfahtech/be_erfahtech/model"
@@ -52,7 +51,7 @@ func GCFHandlerLogin(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collection
 		Response.Message = "error parsing application/json: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	user, status1, err := SignIn(conn, collectionname, dataUser)
+	user, _, err := SignIn(conn, collectionname, dataUser)
 	if err != nil {
 		Response.Message = err.Error()
 		return GCFReturnStruct(Response)
@@ -62,7 +61,7 @@ func GCFHandlerLogin(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collection
 	if err != nil {
 		Response.Message = "Gagal Encode Token : " + err.Error()
 	} else {
-		Response.Message = "Selamat Datang " + user.Email + " di USE " + strconv.FormatBool(status1)
+		Response.Message = "Selamat Datang " + user.Username + " di USE "
 		Response.Token = tokenstring
 	}
 	return GCFReturnStruct(Response)
@@ -148,7 +147,7 @@ func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *h
 
 func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var Response model.DeviceResponse
+	var Response model.Response
 	Response.Status = false
 	var dataDevice model.Device
 
