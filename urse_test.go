@@ -3,6 +3,7 @@ package beurse
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aiteung/atdb"
 	"github.com/whatsauth/watoken"
@@ -95,8 +96,8 @@ func TestInsertUser(*testing.T){
 
 	hash, _ := module.HashPassword(userdata.Password)
 	userdata.Password = hash
-	nama:=atdb.InsertOneDoc(mconn, "user", userdata)
-	fmt.Println(nama)
+	data:=atdb.InsertOneDoc(mconn, "user", userdata)
+	fmt.Println(data)
 }
 
 func TestGetAllUser(*testing.T){	
@@ -118,8 +119,8 @@ func TestInsertDevice(*testing.T){
 	devicedata.Name = "Lampu"
 	devicedata.Topic = "test/lampu"
 	devicedata.User = token.Id
-	nama:=atdb.InsertOneDoc(mconn, "devices", devicedata)
-	fmt.Println(nama)
+	data:=atdb.InsertOneDoc(mconn, "devices", devicedata)
+	fmt.Println(data)
 }
 
 func TestGetDevicesByUser(*testing.T){
@@ -181,4 +182,50 @@ func TestDelete(t *testing.T) {
 			fmt.Println("Data berhasil dihapus dengan id : ", doc.ID)
 		}
 	}
+}
+
+func TestInsertHistory(*testing.T){
+	time := module.Waktu(time.Now().Format(time.RFC3339))
+	var historydata model.History
+	mconn := module.SetConnection("MONGOSTRING", "db_urse")
+	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTEzVDEwOjA2OjQ1WiIsImlhdCI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIn3W8ZmzU2TEiWjsvDqrnfMRtPXQRMWI2t2UUl5Y5oxUp-IwXQCMYHo6kt-A3yqjFamgWNOKq6aIkEovhbuqpGoC")
+	historydata.Name = "Lampu3"
+	historydata.Topic = "test/lampu3"
+	historydata.Payload = "1"
+	historydata.User = token.Id
+	historydata.CreatedAt = time
+	data:=atdb.InsertOneDoc(mconn, "history", historydata)
+	fmt.Println(data)
+}
+
+func TestGetAllHistory(*testing.T){
+	mconn := module.SetConnection("MONGOSTRING", "db_urse")	
+	history := module.GetAllHistory(mconn, "history")
+	fmt.Println(history)
+}
+
+func TestGetHistoryByUser(*testing.T){
+	// token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTEzVDEwOjA2OjQ1WiIsImlhdCI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIn3W8ZmzU2TEiWjsvDqrnfMRtPXQRMWI2t2UUl5Y5oxUp-IwXQCMYHo6kt-A3yqjFamgWNOKq6aIkEovhbuqpGoC")
+	email := "dito@gmail.com"
+	mconn := module.SetConnection("MONGOSTRING", "db_urse")
+	history,_:=module.GetHistoryByUser(mconn, "history", email)
+	fmt.Println(history)
+}
+
+func TestDeleteAllHistory(t *testing.T){
+	// token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTEyVDA1OjEzOjM4WiIsImlhdCI6IjIwMjMtMTEtMTJUMDM6MTM6MzhaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMTJUMDM6MTM6MzhaIn2tOpGc5ISmksdBUgsD_l7qpWVAqqCmQIbC3Cd9sW82sVxaNagaqyNQwRb5t_E_7tn1dvv78Ndw9Pe85fIueRUF")
+	email := "dito@gmail.com"
+	mconn := module.SetConnection("MONGOSTRING", "db_urse")
+	err := module.DeleteAllHistoryByUser(mconn, "history", email)
+	if err != nil {
+		t.Errorf("Failed to delete history: %v", err)
+	} else {
+		fmt.Println("Successfully deleted all history for user:", email)
+	}
+}
+
+func TestWaktu(t *testing.T){
+	// s := "2022-03-23T07:00:00+01:00"
+	time := module.Waktu(time.Now().Format(time.RFC3339))
+	fmt.Println(time)
 }

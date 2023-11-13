@@ -2,7 +2,9 @@ package beurse
 
 import (
 	"context"
+	"log"
 	"os"
+	"time"
 
 	// "crypto/rand"
 	// "encoding/hex"
@@ -32,6 +34,15 @@ func SetConnection(MONGOCONNSTRINGENV, dbname string) *mongo.Database {
 	}
 	return atdb.MongoConnect(DBmongoinfo)
 }
+
+func Waktu(s string) time.Time {
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	t, err := time.ParseInLocation(time.RFC3339, s, loc)
+	if err != nil {
+	  log.Fatal(err)
+	}
+	return t
+  }
 
 func IsPasswordValid(mongoconn *mongo.Database, collection string, userdata model.User) bool {
 	filter := bson.M{"email": userdata.Email}
@@ -270,4 +281,42 @@ func DeleteDeviceByID(id primitive.ObjectID, db *mongo.Database) error {
 	}
 
 	return nil
+}
+
+//History
+func GetAllHistory(mongoconn *mongo.Database, collection string) []model.History {
+	history := atdb.GetAllDoc[[]model.History](mongoconn, collection)
+	return history
+}
+
+func GetHistoryByUser(conn *mongo.Database, collectionname string, email string) ([]model.History, error) {
+	var history []model.History
+	collection := conn.Collection(collectionname)
+
+	// Menggunakan filter untuk mencari data histort yang sesuai dengan ID pengguna
+	filter := bson.M{"user": email}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return history, err
+	}
+
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var datahistory model.History
+		if err := cursor.Decode(&datahistory); err != nil {
+			return history, err
+		}
+		history = append(history, datahistory)
+	}
+
+	return history, nil
+}
+
+func DeleteAllHistoryByUser(conn *mongo.Database, collectionname string, userId string) error {
+    collection := conn.Collection(collectionname)
+    filter := bson.M{"user": userId}
+    _, err := collection.DeleteMany(context.Background(), filter)
+    return err
 }

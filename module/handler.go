@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	model "github.com/erfahtech/be_erfahtech/model"
 	"github.com/whatsauth/watoken"
@@ -243,5 +244,88 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 
 	Response.Status = true
 	Response.Message = "Device berhasil dihapus"
+	return GCFReturnStruct(Response)
+}
+
+//History
+
+func GCFInsertHistory(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+	var Response model.Credential
+	var historydata model.History
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	err := json.NewDecoder(r.Body).Decode(&historydata)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	if err != nil {
+		Response.Message = "Error decoding token: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	time := Waktu(time.Now().Format(time.RFC3339))
+	historydata.User = user.Id
+	historydata.CreatedAt = time
+	InsertOneDoc(conn, "history", historydata)
+	Response.Status = true
+	Response.Message = "History berhasil ditambahkan dengan nama: " + historydata.Name + " dan payload: " + historydata.Payload
+	return GCFReturnStruct(Response)
+}
+
+func GCFGetHistory(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	var Response model.HistoryResponse
+	Response.Status = false
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	
+	// Menyimpan token dari request
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	
+	// Decode token untuk mendapatkan ID pengguna
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	if err != nil {
+		Response.Message = "Error decoding token: " + err.Error()
+	} else {
+		// Mengambil data history berdasarkan ID pengguna
+		history, err := GetHistoryByUser(conn, collectionname, user.Id)
+		if err != nil {
+			Response.Message = "Error fetching history: " + err.Error()
+		} else {
+			Response.Status = true
+			Response.Message = "History data successfully retrieved"
+			Response.Data = history
+		}
+	}
+	
+	return GCFReturnStruct(Response)
+}
+
+func GCFDeleteAllHistory (PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	var Response model.Response
+	Response.Status = false
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	
+	// Menyimpan token dari request
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	
+	// Decode token untuk mendapatkan ID pengguna
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	if err != nil {
+		Response.Message = "Error decoding token: " + err.Error()
+	} else {
+		// Mengambil data history berdasarkan ID pengguna
+		err := DeleteAllHistoryByUser(conn, collectionname, user.Id)
+		if err != nil {
+			Response.Message = "Error deleting history: " + err.Error()
+		} else {
+			Response.Status = true
+			Response.Message = "History data successfully deleted"
+		}
+	}
+	
 	return GCFReturnStruct(Response)
 }
