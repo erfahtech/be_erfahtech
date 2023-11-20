@@ -248,6 +248,58 @@ func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	return GCFReturnStruct(Response)
 }
 
+func GCFHandlerStatusDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.Response
+	Response.Status = false
+	var dataDevice model.Device
+
+	// Get the "id" parameter from the URL
+	id := GetID(r)
+    if id == "" {
+        Response.Message = "Missing 'id' parameter in the URL"
+        GCFReturnStruct(Response)
+    }
+
+	// Convert the ID string to primitive.ObjectID
+	idparam, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		Response.Message = "Invalid id parameter"
+		GCFReturnStruct(Response)
+	}
+
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:"
+		return GCFReturnStruct(Response)
+	}
+
+	// decode token
+	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+		return GCFReturnStruct(Response)
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	err = UpdateDeviceStatusByID(idparam, conn, "status", dataDevice.Status)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Device berhasil diupdate"
+	return GCFReturnStruct(Response)
+}
+
+
 //History
 
 func GCFInsertHistory(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
