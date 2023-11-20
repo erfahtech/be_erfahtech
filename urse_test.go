@@ -165,6 +165,24 @@ func TestUpdateDevice(t *testing.T) {
         fmt.Println("Data berhasil diubah dengan ID:", doc.ID)
     }
 }
+func TestUpdateDeviceStatus(t *testing.T) {
+    var doc model.Device
+    doc.Status = false
+
+    id, err := primitive.ObjectIDFromHex("653e8ce4550665ec0bcfb9df")
+    doc.ID = id
+    if err != nil {
+        t.Errorf("Error converting ID: %v", err)
+        return
+    }
+
+    err = module.UpdateDeviceStatusByID(id, db, "status", doc.Status)
+    if err != nil {
+        t.Errorf("Error updating document: %v", err)
+    } else {
+        fmt.Println("Data berhasil diubah dengan ID:", doc.ID)
+    }
+}
 
 
 func TestDelete(t *testing.T) {

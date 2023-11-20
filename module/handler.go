@@ -95,6 +95,7 @@ func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *h
     }
 
 	devicedata.User = user.Id
+	devicedata.Status = false
 	InsertOneDoc(conn, "devices", devicedata)
 	Response.Status = true
 	Response.Message = "Device berhasil ditambahkan dengan nama: " + devicedata.Name

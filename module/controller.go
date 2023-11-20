@@ -268,6 +268,26 @@ func UpdateDeviceByID(id primitive.ObjectID, db *mongo.Database, doc model.Devic
 	return nil
 }
 
+func UpdateDeviceStatusByID(id primitive.ObjectID, db *mongo.Database, fieldName string, fieldValue interface{}) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // Adjust the timeout as needed
+    defer cancel()
+
+    filter := bson.M{"_id": id}
+    update := bson.M{"$set": bson.M{fieldName: fieldValue}}
+
+    result, err := db.Collection("devices").UpdateOne(ctx, filter, update)
+    if err != nil {
+        return fmt.Errorf("failed to update field %s for ID %s: %w", fieldName, id, err)
+    }
+
+    if result.ModifiedCount == 0 {
+        return fmt.Errorf("no data has been changed with the specified ID %s", id)
+    }
+
+    return nil
+}
+
+
 func DeleteDeviceByID(id primitive.ObjectID, db *mongo.Database) error {
 	collection := db.Collection("devices")
 	filter := bson.M{"_id": id}
