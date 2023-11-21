@@ -295,7 +295,7 @@ func GCFHandlerUpdateStatusDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, c
 		return GCFReturnStruct(Response)
 	}
 	Response.Status = true
-	Response.Message = "Device berhasil diupdate"
+	Response.Message = "Status Device berhasil diupdate"
 	return GCFReturnStruct(Response)
 }
 

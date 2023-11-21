@@ -202,19 +202,28 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestInsertHistory(*testing.T){
-	time := module.Waktu(time.Now().Format(time.RFC3339))
+func TestInsertHistory(t *testing.T) {
+	currentTime := time.Now()
+	waktu := module.Waktu(currentTime.Format(time.RFC3339))
+
 	var historydata model.History
 	mconn := module.SetConnection("MONGOSTRING", "db_urse")
-	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTExLTEzVDEwOjA2OjQ1WiIsImlhdCI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIn3W8ZmzU2TEiWjsvDqrnfMRtPXQRMWI2t2UUl5Y5oxUp-IwXQCMYHo6kt-A3yqjFamgWNOKq6aIkEovhbuqpGoC")
+	// token, _ := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", "v4.public.eyJleHAiOiIyMDIzLTExLTEzVDEwOjA2OjQ1WiIsImlhdCI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMTNUMDg6MDY6NDVaIn3W8ZmzU2TEiWjsvDqrnfMRtPXQRMWI2t2UUl5Y5oxUp-IwXQCMYHo6kt-A3yqjFamgWNOKq6aIkEovhbuqpGoC")
+	const email = "dito@gmail.com"
+
 	historydata.Name = "Lampu3"
-	historydata.Topic = "test/lampu3"
+	historydata.Topic = "test/lampu5"
 	historydata.Payload = "1"
-	historydata.User = token.Id
-	historydata.CreatedAt = time
-	data:=atdb.InsertOneDoc(mconn, "history", historydata)
+	historydata.User = email
+	fmt.Println("Waktu sekarang:", waktu)
+	historydata.CreatedAt = waktu
+	fmt.Println("Waktu yang akan dimasukkan ke dalam MongoDB:", historydata.CreatedAt)
+
+
+	data := atdb.InsertOneDoc(mconn, "history", historydata)
 	fmt.Println(data)
 }
+
 
 func TestGetAllHistory(*testing.T){
 	mconn := module.SetConnection("MONGOSTRING", "db_urse")	
