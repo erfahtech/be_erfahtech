@@ -1,9 +1,14 @@
 package beurse
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
 	"log"
+	"math/big"
+	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	// "crypto/rand"
@@ -42,7 +47,36 @@ func Waktu(s string) time.Time {
 	  log.Fatal(err)
 	}
 	return t
-  }
+}
+
+func ValidatePhoneNumber(phoneNumber string) (bool, error) {
+	// Define the regular expression pattern for numeric characters
+	numericPattern := `^[0-9]+$`
+
+	// Compile the numeric pattern
+	numericRegexp, err := regexp.Compile(numericPattern)
+	if err != nil {
+		return false, err
+	}
+	// Check if the phone number consists only of numeric characters
+	if !numericRegexp.MatchString(phoneNumber) {
+		return false, nil
+	}
+
+	// Define the regular expression pattern for "62" followed by 6 to 12 digits
+	pattern := `^62\d{6,13}$`
+
+	// Compile the regular expression
+	regexpPattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return false, err
+	}
+
+	// Test if the phone number matches the pattern
+	isValid := regexpPattern.MatchString(phoneNumber)
+
+	return isValid, nil
+}
 
 func IsPasswordValid(mongoconn *mongo.Database, collection string, userdata model.User) bool {
 	filter := bson.M{"email": userdata.Email}
@@ -70,6 +104,19 @@ func GetAllDocs(db *mongo.Database, col string, docs interface{}) interface{} {
 		fmt.Println(err)
 	}
 	return docs
+}
+
+func GetOTPbyEmail(email string, db *mongo.Database) (doc model.Otp, err error) {
+	collection := db.Collection("otp")
+	filter := bson.M{"email": email}
+	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return doc, fmt.Errorf("email tidak ditemukan")
+		}
+		return doc, fmt.Errorf("kesalahan server")
+	}
+	return doc, nil
 }
 
 func InsertOneDoc(db *mongo.Database, col string, doc interface{}) (insertedID primitive.ObjectID, err error) {
@@ -141,8 +188,12 @@ func GetDocsByFilter(db *mongo.Database, collectionName string, filter bson.M) (
 func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	objectId := primitive.NewObjectID()
 
-	if insertedDoc.Username == "" || insertedDoc.Email == "" || insertedDoc.Password == "" {
+	if insertedDoc.Username == "" || insertedDoc.Email == "" || insertedDoc.Password == "" || insertedDoc.PhoneNumber == ""{
 		return fmt.Errorf("mohon untuk melengkapi data")
+	}
+	valid, _ := ValidatePhoneNumber(insertedDoc.PhoneNumber)
+	if !valid {
+		return fmt.Errorf("nomor telepon tidak valid")
 	}
 	if err := checkmail.ValidateFormat(insertedDoc.Email); err != nil {
 		return fmt.Errorf("email tidak valid")
@@ -165,6 +216,7 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 		"username": insertedDoc.Username,
 		"email":    insertedDoc.Email,
 		"password": hash,
+		"phonenumber": insertedDoc.PhoneNumber,
 		// "role":     "user",
 	}
 	_, err := InsertOneDoc(db, col, user)
@@ -339,4 +391,181 @@ func DeleteAllHistoryByUser(conn *mongo.Database, collectionname string, userId 
     filter := bson.M{"user": userId}
     _, err := collection.DeleteMany(context.Background(), filter)
     return err
+}
+
+// OTP
+func OtpGenerate() (string, error) {
+	randomNumber, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		return "", err
+	}
+	// Format the random number as a 4-digit string
+	otp := fmt.Sprintf("%04d", randomNumber)
+
+	return otp, nil
+}
+
+func GenerateExpiredAt() int64 {
+	currentTime := time.Now()
+
+	// Add 5 minutes
+	newTime := currentTime.Add(5 * time.Minute)
+	return newTime.Unix()
+}
+
+func SendOTP(db *mongo.Database, email string) (string, error) {
+	// GET OTP
+	otp, _ := OtpGenerate()
+
+	// GET EXPIRED AT
+	expiredAt := GenerateExpiredAt()
+
+	// get user by email
+	existsDoc, err := GetUserFromEmail(email, db)
+	if err != nil {
+		return "", fmt.Errorf("email tidak ditemukan1")
+	}
+	if existsDoc.Email == "" {
+		return "", fmt.Errorf("email tidak ditemukan2")
+	}
+
+	// save otp to db
+	// objectId := primitive.NewObjectID()
+	otpDoc := bson.M{
+		// "_id":       objectId,
+		"email":     email,
+		"otp":       otp,
+		"expiredat": expiredAt,
+		"status":    false,
+	}
+
+	// get otp by email
+	_, err = GetOTPbyEmail(email, db)
+
+	if err != nil {
+		if err.Error() == "email tidak ditemukan" {
+			// return "", fmt.Errorf("error getting OTP from email: %s", err.Error())
+			// insert new OTP
+			_, err = db.Collection("otp").InsertOne(context.Background(), otpDoc)
+			if err != nil {
+				return "", fmt.Errorf("error inserting OTP: %s", err.Error())
+			}
+			return otp, nil
+		} else {
+			return "", fmt.Errorf("error Get OTP: %s", err.Error())
+		}
+	} else {
+		// update existing OTP
+		filter := bson.M{"email": email}
+		update := bson.M{"$set": otpDoc}
+		_, err = db.Collection("otp").UpdateOne(context.Background(), filter, update)
+		if err != nil {
+			return "", fmt.Errorf("error updating OTP: %s", err.Error())
+		}
+	}
+
+	// postapi
+	url := "https://api.wa.my.id/api/send/message/text"
+
+	// Data yang akan dikirimkan dalam format JSON
+	jsonStr := []byte(`{
+        "to": "` + existsDoc.PhoneNumber + `",
+        "isgroup": false,
+        "messages": "kode Otp akun trensentimen.my.id atas nama *` + email + `* adalah *` + otp + `*"
+    }`)
+
+	// Membuat permintaan HTTP POST
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return "", err
+	}
+
+	// Menambahkan header ke permintaan
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDIzLTEyLTE2VDE3OjQ3OjQ3KzA3OjAwIiwiaWF0IjoiMjAyMy0xMS0xNlQxNzo0Nzo0NyswNzowMCIsImlkIjoiNjI4NTcwMzMwNTE2MyIsIm5iZiI6IjIwMjMtMTEtMTZUMTc6NDc6NDcrMDc6MDAifXlYzCjMwUnUHhdyWpcQyq33tOKlhJIWHzBr5Zq2PgmYxjeghbWqkS1QUH7ojfzPYd1fIaWOHnoE29zbE-v_tQk")
+	req.Header.Set("Content-Type", "application/json")
+
+	// Melakukan permintaan HTTP POST
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Menampilkan respons dari server
+	fmt.Println("Response Status:", resp.Status)
+	return "success", nil
+}
+
+func VerifyOTP(db *mongo.Database, email, otp string) (string, error) {
+	// get otp by email
+	otpDoc, err := GetOTPbyEmail(email, db)
+	if err != nil {
+		return "", fmt.Errorf("error Get OTP: %s", err.Error())
+	}
+
+	// check otp
+	if otpDoc.OTP != otp {
+		return "", fmt.Errorf("otp tidak valid")
+	}
+
+	// check expired at
+	if otpDoc.ExpiredAt < time.Now().Unix() {
+		return "", fmt.Errorf("otp telah kadaluarsa")
+	}
+
+	//update otp
+	filter := bson.M{"email": email}
+	update := bson.M{"$set": bson.M{"status": true}}
+	_, err = db.Collection("otp").UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		return "", fmt.Errorf("error updating OTP: %s", err.Error())
+	}
+
+	return otp, nil
+}
+
+func ResetPassword(db *mongo.Database, email, otp, password string) (string, error) {
+	// get user by email
+	existsDoc, err := GetUserFromEmail(email, db)
+	if err != nil {
+		return "", fmt.Errorf("email tidak ditemukan1")
+	}
+	if existsDoc.Email == "" {
+		return "", fmt.Errorf("email tidak ditemukan2")
+	}
+
+	// check otp
+	docOtp, err := GetOTPbyEmail(email, db)
+	if err != nil {
+		return "", fmt.Errorf("error Get OTP: %s", err.Error())
+	}
+	if docOtp.OTP != otp || !docOtp.Status {
+		return "", fmt.Errorf("otp tidak valid")
+	}
+
+	// hash password
+	hash, _ := HashPassword(password)
+
+	// update password
+	filter := bson.M{"email": email}
+	update := bson.M{"$set": bson.M{"password": hash}}
+	_, err = db.Collection("user").UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return "", fmt.Errorf("error updating password: %s", err.Error())
+	}
+
+	// update otp
+	filter = bson.M{"email": email}
+	update = bson.M{"$set": bson.M{"status": false}}
+	_, err = db.Collection("otp").UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return "", fmt.Errorf("error updating password: %s", err.Error())
+	}
+
+	return "success", nil
 }
