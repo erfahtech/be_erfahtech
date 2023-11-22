@@ -256,3 +256,73 @@ func TestWaktu(t *testing.T){
 	time := module.Waktu(time.Now().Format(time.RFC3339))
 	fmt.Println(time)
 }
+
+//test otp
+func TestGenerateOTP(t *testing.T) {
+	var email = ""
+	otp, _ := module.OtpGenerate()
+	var expiredAt = module.GenerateExpiredAt()
+	var doc model.Otp
+	doc.Email = email
+	doc.OTP = otp
+	doc.ExpiredAt = expiredAt
+	fmt.Println(otp)
+	fmt.Println(expiredAt)
+}
+
+func TestSendOTP(t *testing.T) {
+	var email = ""
+	otp, _ := module.OtpGenerate()
+	var expiredAt = module.GenerateExpiredAt()
+	var doc model.Otp
+	doc.Email = email
+	doc.OTP = otp
+	doc.ExpiredAt = expiredAt
+	fmt.Println(otp)
+	fmt.Println(expiredAt)
+	otp, err := module.SendOTP(db, "email@gmail.com")
+	if err != nil {
+		fmt.Println("Error sending otp: ", err)
+	} else {
+		fmt.Println("Data berhasil dikirim :", otp)
+	}
+
+}
+
+func TestCekOTP(t *testing.T) {
+	var email = "email@gmail.com"
+	otp := "6453"
+	otp, err := module.VerifyOTP(db, email, otp)
+	if err != nil {
+		fmt.Println("Error sending otp: ", err)
+	} else {
+		fmt.Println("Data berhasil dikirim :", otp)
+	}
+}
+
+func TestUpdatePassword(t *testing.T) {
+	var email = "email@gmail.com"
+	otp := "6453"
+	password := "daniaw"
+	message, err := module.ResetPassword(db, email, otp, password)
+	if err != nil {
+		fmt.Println("Error sending otp: ", err)
+	} else {
+		fmt.Println("Data berhasil dikirim :", message)
+	}
+}
+
+func TestValidatePhoneNumber(t *testing.T) {
+	phoneNumber := "62812345690"
+	isValid, err := module.ValidatePhoneNumber(phoneNumber)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	if isValid {
+		fmt.Println("Phone number is valid.")
+	} else {
+		fmt.Println("Phone number is not valid.")
+	}
+}
