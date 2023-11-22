@@ -11,6 +11,7 @@ type User struct {
 	Username string `json:"username" bson:"username"`
 	Email    string `json:"Email" bson:"email"`
 	Password string `json:"password" bson:"password"`
+	PhoneNumber string             `json:"phonenumber,omitempty" bson:"phonenumber,omitempty"`
 	// Role     string `json:"role,omitempty" bson:"role,omitempty"`
 }
 
@@ -29,8 +30,6 @@ type History struct {
 	Payload   string             `json:"payload" bson:"payload"`
 	User      string             `json:"user" bson:"user"`
 	CreatedAt time.Time			 `json:"created_at" bson:"created_at"`
-	// CreatedAt primitive.DateTime `json:"created_at" bson:"created_at"`
-	// CreatedAt time.Time 			 `json:"created_at" bson:"created_at"`
 }
 
 type Credential struct {
@@ -54,4 +53,18 @@ type HistoryResponse struct {
 type Response struct {
 	Status  bool   `json:"status"`
 	Message string `json:"message"`
+}
+
+type Otp struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Email     string             `json:"email" bson:"email"`
+	OTP       string             `json:"otp" bson:"otp"`
+	ExpiredAt int64              `json:"expiredat" bson:"expiredat"`
+	Status    bool               `json:"status" bson:"status"`
+}
+
+type ResetPassword struct {
+	Email    string `json:"email" bson:"email"`
+	OTP      string `json:"otp" bson:"otp"`
+	Password string `json:"password" bson:"password"`
 }
