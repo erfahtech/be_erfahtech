@@ -382,3 +382,65 @@ func GCFDeleteAllHistory (PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collec
 	
 	return GCFReturnStruct(Response)
 }
+
+func GCFHandlerSendOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.Response
+	Response.Status = false
+	var dataUser model.User
+	err := json.NewDecoder(r.Body).Decode(&dataUser)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	_, err = SendOTP(conn, dataUser.Email)
+	if err != nil {
+		Response.Message = err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "msg " + dataUser.Email
+	return GCFReturnStruct(Response)
+}
+
+func GCFHandlerVerifyOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.Response
+	Response.Status = false
+	var dataOTP model.Otp
+	err := json.NewDecoder(r.Body).Decode(&dataOTP)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	otp, err := VerifyOTP(conn, dataOTP.Email, dataOTP.OTP)
+	if err != nil {
+		Response.Message = err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = otp
+	return GCFReturnStruct(Response)
+}
+
+func GCFHandlerResetPassword(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.Response
+	Response.Status = false
+	var data model.ResetPassword
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	_, err = ResetPassword(conn, data.Email, data.OTP, data.Password)
+	if err != nil {
+		Response.Message = err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Berhasil, Silahkan Kembali ke Login " + data.Email
+	return GCFReturnStruct(Response)
+}
