@@ -62,9 +62,10 @@ func TestIsPasswordValid(t *testing.T) {
 
 func TestSignUp(t *testing.T) {
 	var doc model.User
-	doc.Username = "Erdito Nausha Adam"
-	doc.Email = "dito@gmail.com"
+	doc.Username = "Nausha"
+	doc.Email = "nausha@gmail.com"
 	doc.Password = "secret"
+	doc.PhoneNumber = "6285718177810"
 
 	err := module.SignUp(db, "user", doc)
 	if err != nil {
