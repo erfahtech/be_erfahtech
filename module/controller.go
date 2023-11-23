@@ -471,7 +471,7 @@ func SendOTP(db *mongo.Database, email string) (string, error) {
 	jsonStr := []byte(`{
         "to": "` + existsDoc.PhoneNumber + `",
         "isgroup": false,
-        "messages": "kode Otp akun trensentimen.my.id atas nama *` + email + `* adalah *` + otp + `*"
+        "messages": "Berikut kode Otp reset password akun ursmartecosystem.my.id atas nama *` + email + `* adalah *` + otp + `*"
     }`)
 
 	// Membuat permintaan HTTP POST
