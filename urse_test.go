@@ -280,7 +280,7 @@ func TestSendOTP(t *testing.T) {
 	doc.ExpiredAt = expiredAt
 	fmt.Println(otp)
 	fmt.Println(expiredAt)
-	otp, err := module.SendOTP(db, "email@gmail.com")
+	otp, err := module.SendOTP(db, "adam@gmail.com")
 	if err != nil {
 		fmt.Println("Error sending otp: ", err)
 	} else {
@@ -290,8 +290,8 @@ func TestSendOTP(t *testing.T) {
 }
 
 func TestCekOTP(t *testing.T) {
-	var email = "email@gmail.com"
-	otp := "6453"
+	var email = "adam@gmail.com"
+	otp := "414033"
 	otp, err := module.VerifyOTP(db, email, otp)
 	if err != nil {
 		fmt.Println("Error sending otp: ", err)
@@ -301,9 +301,9 @@ func TestCekOTP(t *testing.T) {
 }
 
 func TestUpdatePassword(t *testing.T) {
-	var email = "email@gmail.com"
-	otp := "6453"
-	password := "daniaw"
+	var email = "adam@gmail.com"
+	otp := "414033"
+	password := "secretadam"
 	message, err := module.ResetPassword(db, email, otp, password)
 	if err != nil {
 		fmt.Println("Error sending otp: ", err)
