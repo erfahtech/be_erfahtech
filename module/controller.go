@@ -195,11 +195,15 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	if !valid {
 		return fmt.Errorf("nomor telepon tidak valid")
 	}
+	numberphoneExists, _ := GetUserFromPhoneNumber(insertedDoc.PhoneNumber, db)
+    if insertedDoc.PhoneNumber == numberphoneExists.PhoneNumber {
+        return fmt.Errorf("nomor telepon sudah terdaftar")
+    }
 	if err := checkmail.ValidateFormat(insertedDoc.Email); err != nil {
 		return fmt.Errorf("email tidak valid")
 	}
-	userExists, _ := GetUserFromEmail(insertedDoc.Email, db)
-	if insertedDoc.Email == userExists.Email {
+	emailExists, _ := GetUserFromEmail(insertedDoc.Email, db)
+	if insertedDoc.Email == emailExists.Email {
 		return fmt.Errorf("email sudah terdaftar")
 	}
 	if strings.Contains(insertedDoc.Password, " ") {
@@ -267,6 +271,19 @@ func GetUserFromEmail(email string, db *mongo.Database) (doc model.User, err err
 	filter := bson.M{"email": email}
 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return doc, fmt.Errorf("email tidak ditemukan")
+		}
+		return doc, fmt.Errorf("kesalahan server")
+	}
+	return doc, nil
+}
+
+func GetUserFromPhoneNumber(phonenumber string, db *mongo.Database) (doc model.User, err error) {
+    collection := db.Collection("user")
+    filter := bson.M{"phonenumber": phonenumber}
+    err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+    if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return doc, fmt.Errorf("email tidak ditemukan")
 		}
@@ -395,12 +412,12 @@ func DeleteAllHistoryByUser(conn *mongo.Database, collectionname string, userId 
 
 // OTP
 func OtpGenerate() (string, error) {
-	randomNumber, err := rand.Int(rand.Reader, big.NewInt(10000))
+	randomNumber, err := rand.Int(rand.Reader, big.NewInt(1000000))
 	if err != nil {
 		return "", err
 	}
-	// Format the random number as a 4-digit string
-	otp := fmt.Sprintf("%04d", randomNumber)
+	// Format the random number as a 6-digit string
+	otp := fmt.Sprintf("%06d", randomNumber)
 
 	return otp, nil
 }
@@ -483,7 +500,7 @@ func SendOTP(db *mongo.Database, email string) (string, error) {
 
 	// Menambahkan header ke permintaan
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDIzLTEyLTE2VDE3OjQ3OjQ3KzA3OjAwIiwiaWF0IjoiMjAyMy0xMS0xNlQxNzo0Nzo0NyswNzowMCIsImlkIjoiNjI4NTcwMzMwNTE2MyIsIm5iZiI6IjIwMjMtMTEtMTZUMTc6NDc6NDcrMDc6MDAifXlYzCjMwUnUHhdyWpcQyq33tOKlhJIWHzBr5Zq2PgmYxjeghbWqkS1QUH7ojfzPYd1fIaWOHnoE29zbE-v_tQk")
+	req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDIzLTEyLTIyVDE0OjQzOjUzKzA3OjAwIiwiaWF0IjoiMjAyMy0xMS0yMlQxNDo0Mzo1MyswNzowMCIsImlkIjoiNjI4NTE2MTk5MjA1MyIsIm5iZiI6IjIwMjMtMTEtMjJUMTQ6NDM6NTMrMDc6MDAifYnf6Vf8-q6QpR20Pso6RWvhq50jonNOV_ucf9-ppSLCem6BDSjdjymp1bQjw81eZlrV0VzKd0arb-0YSl0EiAE")
 	req.Header.Set("Content-Type", "application/json")
 
 	// Melakukan permintaan HTTP POST
@@ -509,12 +526,12 @@ func VerifyOTP(db *mongo.Database, email, otp string) (string, error) {
 
 	// check otp
 	if otpDoc.OTP != otp {
-		return "", fmt.Errorf("otp tidak valid")
+		return "", fmt.Errorf("kode otp tidak valid")
 	}
 
 	// check expired at
 	if otpDoc.ExpiredAt < time.Now().Unix() {
-		return "", fmt.Errorf("otp telah kadaluarsa")
+		return "", fmt.Errorf("kode otp telah kadaluarsa")
 	}
 
 	//update otp
@@ -545,7 +562,7 @@ func ResetPassword(db *mongo.Database, email, otp, password string) (string, err
 		return "", fmt.Errorf("error Get OTP: %s", err.Error())
 	}
 	if docOtp.OTP != otp || !docOtp.Status {
-		return "", fmt.Errorf("otp tidak valid")
+		return "", fmt.Errorf("kode otp tidak valid")
 	}
 
 	// hash password
