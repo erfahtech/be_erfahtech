@@ -383,6 +383,8 @@ func GCFDeleteAllHistory (PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collec
 	return GCFReturnStruct(Response)
 }
 
+//otp
+
 func GCFHandlerSendOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.Response
