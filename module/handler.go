@@ -75,17 +75,11 @@ func GCFHandlerGetAll(MONGOCONNSTRINGENV, dbname, col string, docs interface{}) 
 }
 
 func GCFGetUserByEmail(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectionname string, r *http.Request) string {
-	var userdata model.User
 	var Response model.Credential
 	Response.Status = false
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
-	err := json.NewDecoder(r.Body).Decode(&userdata)
-	if err != nil {
-		Response.Message = "error parsing application/json: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
 
 	profile, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 	    if err != nil {
