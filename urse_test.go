@@ -107,6 +107,16 @@ func TestGetAllUser(*testing.T){
 	fmt.Println(user)
 }
 
+func TestGetUserByEmail(*testing.T){
+	var userdata model.User
+	userdata.Email = "adam@gmail.com"
+	mconn := module.SetConnection("MONGOSTRING", "db_urse")
+	filter := bson.M{"email": userdata.Email}
+	user,_:=module.GetDocsByFilter(mconn, "user", filter)
+	fmt.Println(user)
+}
+
+
 func TestGetAllDevice(*testing.T){	
 	mconn := module.SetConnection("MONGOSTRING", "db_urse")	
 	device := module.GetAllDevice(mconn, "devices")

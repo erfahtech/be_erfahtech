@@ -74,6 +74,36 @@ func GCFHandlerGetAll(MONGOCONNSTRINGENV, dbname, col string, docs interface{}) 
 	return GCFReturnStruct(data)
 }
 
+func GCFGetUserByEmail(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectionname string, r *http.Request) string {
+	var userdata model.User
+	var Response model.Credential
+	Response.Status = false
+	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	filter := bson.M{"email": userdata.Email}
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	err := json.NewDecoder(r.Body).Decode(&userdata)
+	if err != nil {
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	_, err = watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	    if err != nil {
+        Response.Message = "Error decoding token: " + err.Error()
+        return GCFReturnStruct(Response)
+    }
+
+	user, err := GetDocsByFilter(conn, collectionname, filter)
+	if err != nil {
+		var Response model.Credential
+		Response.Status = false
+		Response.Message = "Error fetching user: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	return GCFReturnStruct(user)
+}
+
 //Device
 
 func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
