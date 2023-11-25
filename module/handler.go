@@ -79,7 +79,6 @@ func GCFGetUserByEmail(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectio
 	var Response model.Credential
 	Response.Status = false
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	filter := bson.M{"email": userdata.Email}
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
 	err := json.NewDecoder(r.Body).Decode(&userdata)
@@ -88,12 +87,12 @@ func GCFGetUserByEmail(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectio
 		return GCFReturnStruct(Response)
 	}
 
-	_, err = watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	profile, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 	    if err != nil {
         Response.Message = "Error decoding token: " + err.Error()
         return GCFReturnStruct(Response)
     }
-
+	filter := bson.M{"email": profile.Id}
 	user, err := GetDocsByFilter(conn, collectionname, filter)
 	if err != nil {
 		var Response model.Credential
