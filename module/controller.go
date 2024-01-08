@@ -298,6 +298,19 @@ func GetAllDevice(mongoconn *mongo.Database, collection string) []model.Device {
 	return device
 }
 
+func GetDeviceByID(_id primitive.ObjectID, db *mongo.Database) (doc model.Device, err error) {
+	collection := db.Collection("devices")
+	filter := bson.M{"_id": _id}
+	err = collection.FindOne(context.Background(), filter).Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return doc, fmt.Errorf("no data found for ID %s", _id)
+		}
+		return doc, fmt.Errorf("error retrieving data for ID %s: %s", _id, err.Error())
+	}
+	return doc, nil
+}
+
 func GetDevicesByUser(conn *mongo.Database, collectionname string, email string) ([]model.Device, error) {
 	var devices []model.Device
 	collection := conn.Collection(collectionname)
@@ -323,6 +336,30 @@ func GetDevicesByUser(conn *mongo.Database, collectionname string, email string)
 	return devices, nil
 }
 
+func InsertDevice(iduser string, db *mongo.Database, doc model.Device) (bson.M, error) {
+
+	if doc.Name == "" || doc.Topic == "" {
+		return bson.M{}, fmt.Errorf("mohon untuk melengkapi data")
+	}
+	user, err := GetUserFromEmail(iduser, db)
+	if err != nil {
+		return bson.M{}, fmt.Errorf("user tidak ditemukan")
+	}
+
+	device := bson.M{
+		"_id": primitive.NewObjectID(),
+		"name": doc.Name,
+		"topic": doc.Topic,
+		"user": user.Email,
+		"status": false,
+	}
+	_, err = InsertOneDoc(db, "devices", device)
+	if err != nil {
+		return bson.M{}, err
+	}
+	return device, nil
+}
+
 func UpdateDeviceByID(id primitive.ObjectID, db *mongo.Database, doc model.Device) error {
 	filter := bson.M{"_id": id}
 	result, err := db.Collection("devices").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
@@ -335,6 +372,32 @@ func UpdateDeviceByID(id primitive.ObjectID, db *mongo.Database, doc model.Devic
     }
 
 	return nil
+}
+
+func EditDevice(idparam primitive.ObjectID, iduser string, db *mongo.Database, doc model.Device) (bson.M, error) {
+
+	if doc.Name == "" || doc.Topic == "" {
+		return bson.M{}, fmt.Errorf("mohon untuk melengkapi data")
+	}
+	user, err := GetUserFromEmail(iduser, db)
+	if err != nil {
+		return bson.M{}, fmt.Errorf("user tidak ditemukan")
+	}
+	device, err := GetDeviceByID(idparam, db)
+	if err != nil {
+		return bson.M{}, fmt.Errorf("device tidak ditemukan")
+	}
+
+	data := bson.M{
+		"name": doc.Name,
+		"topic": doc.Topic,
+		"user": user.Email,
+	}
+	err = UpdateOneDoc(db, "devices", device.ID, data)
+	if err != nil {
+		return bson.M{}, err
+	}
+	return data, nil
 }
 
 func UpdateDeviceStatusByID(id primitive.ObjectID, db *mongo.Database, fieldName string, fieldValue interface{}) error {

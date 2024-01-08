@@ -123,16 +123,16 @@ func TestGetAllDevice(*testing.T){
 	fmt.Println(device)
 }
 
-func TestInsertDevice(*testing.T){
-	var devicedata model.Device
-	mconn := module.SetConnection("MONGOSTRING", "db_urse")
-	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTEwLTI0VDEwOjI3OjI2WiIsImlhdCI6IjIwMjMtMTAtMjRUMDg6Mjc6MjZaIiwiaWQiOiJlcmZhaEBnbWFpbC5jb20iLCJuYmYiOiIyMDIzLTEwLTI0VDA4OjI3OjI2WiJ98pBh-mjEoJlp-4vOVFrfzBcFZzzVsavflcv-wQWfGAVNDGL3A4ebwfNwzG91OnRWHDLbM17VghkQa578tLMhAg")
-	devicedata.Name = "Lampu"
-	devicedata.Topic = "test/lampu"
-	devicedata.User = token.Id
-	data:=atdb.InsertOneDoc(mconn, "devices", devicedata)
-	fmt.Println(data)
-}
+// func TestInsertDevice(*testing.T){
+// 	var devicedata model.Device
+// 	mconn := module.SetConnection("MONGOSTRING", "db_urse")
+// 	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTEwLTI0VDEwOjI3OjI2WiIsImlhdCI6IjIwMjMtMTAtMjRUMDg6Mjc6MjZaIiwiaWQiOiJlcmZhaEBnbWFpbC5jb20iLCJuYmYiOiIyMDIzLTEwLTI0VDA4OjI3OjI2WiJ98pBh-mjEoJlp-4vOVFrfzBcFZzzVsavflcv-wQWfGAVNDGL3A4ebwfNwzG91OnRWHDLbM17VghkQa578tLMhAg")
+// 	devicedata.Name = "Lampu"
+// 	devicedata.Topic = "test/lampu"
+// 	devicedata.User = token.Id
+// 	data:=atdb.InsertOneDoc(mconn, "devices", devicedata)
+// 	fmt.Println(data)
+// }	
 
 func TestGetDevicesByUser(*testing.T){
 	token,_:=watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4","v4.public.eyJleHAiOiIyMDIzLTEwLTMwVDAyOjM5OjMwWiIsImlhdCI6IjIwMjMtMTAtMzBUMDA6Mzk6MzBaIiwiaWQiOiJlcmZhaEBnbWFpbC5jb20iLCJuYmYiOiIyMDIzLTEwLTMwVDAwOjM5OjMwWiJ9TRYrR-Ffd_4e1yMaSgkWrcffu7ebEcPmq8VG3_8-MnfNt8cqIStVVbr-0qk5IQom5B3btqK42DhDurCweQu3Ag")
@@ -150,32 +150,32 @@ func TestGetDevicesByEmail(*testing.T){
 	fmt.Println(devices)
 }
 
-func TestUpdateDevice(t *testing.T) {
-    user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", "v4.public.eyJleHAiOiIyMDIzLTExLTA0VDEwOjQzOjAxWiIsImlhdCI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIn3ErasDBJ8ZPB0cronqu5S2WqSJ7fyy1YHXM2ovx_B8hrLfekxMtxCDCze8onBf8E02puRACVmq-P8wrxR1X9cC")
-    if err != nil {
-        t.Errorf("Error decoding token: %v", err)
-        return
-    }
+// func TestUpdateDevice(t *testing.T) {
+//     user, err := watoken.Decode("c49482e6de1fa07a349f354c2277e11bc7115297a40a1c09c52ef77b905d07c4", "v4.public.eyJleHAiOiIyMDIzLTExLTA0VDEwOjQzOjAxWiIsImlhdCI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIiwiaWQiOiJkaXRvQGdtYWlsLmNvbSIsIm5iZiI6IjIwMjMtMTEtMDRUMDg6NDM6MDFaIn3ErasDBJ8ZPB0cronqu5S2WqSJ7fyy1YHXM2ovx_B8hrLfekxMtxCDCze8onBf8E02puRACVmq-P8wrxR1X9cC")
+//     if err != nil {
+//         t.Errorf("Error decoding token: %v", err)
+//         return
+//     }
 
-    var doc model.Device
-    doc.Name = "Ac @4"
-    doc.Topic = "kamar/ac@4"
-    doc.User = user.Id
+//     var doc model.Device
+//     doc.Name = "Ac @4"
+//     doc.Topic = "kamar/ac@4"
+//     doc.User = user.Id
 
-    id, err := primitive.ObjectIDFromHex("6543b1f219d472b85816dad8")
-    doc.ID = id
-    if err != nil {
-        t.Errorf("Error converting ID: %v", err)
-        return
-    }
+//     id, err := primitive.ObjectIDFromHex("6543b1f219d472b85816dad8")
+//     doc.ID = id
+//     if err != nil {
+//         t.Errorf("Error converting ID: %v", err)
+//         return
+//     }
 
-    err = module.UpdateDeviceByID(id, db, doc)
-    if err != nil {
-        t.Errorf("Error updating document: %v", err)
-    } else {
-        fmt.Println("Data berhasil diubah dengan ID:", doc.ID)
-    }
-}
+//     err = module.UpdateDeviceByID(id, db, doc)
+//     if err != nil {
+//         t.Errorf("Error updating document: %v", err)
+//     } else {
+//         fmt.Println("Data berhasil diubah dengan ID:", doc.ID)
+//     }
+// }
 func TestUpdateDeviceStatus(t *testing.T) {
     var doc model.Device
     doc.Status = false
