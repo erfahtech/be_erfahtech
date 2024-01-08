@@ -283,7 +283,7 @@ func TestGenerateOTP(t *testing.T) {
 
 func TestSendOTP(t *testing.T) {
 	var email = ""
-	var TOKENWA = "v4.public.eyJleHAiOiIyMDI0LTAyLTA3VDAzOjE1OjM4WiIsImlhdCI6IjIwMjQtMDEtMDhUMDM6MTU6MzhaIiwiaWQiOiI2Mjg1MTYxOTkyMDUzIiwibmJmIjoiMjAyNC0wMS0wOFQwMzoxNTozOFoifS8cB5ZbYfX05L9OcR7stgqHZN-ZAPOV7crpZYDUek1bLWsNtfRMc1oaMAgaMGztdsSrOmu0z8wKvnb5prelzAk"
+	// var TOKENWA = "v4.public.eyJleHAiOiIyMDI0LTAyLTA3VDAzOjE1OjM4WiIsImlhdCI6IjIwMjQtMDEtMDhUMDM6MTU6MzhaIiwiaWQiOiI2Mjg1MTYxOTkyMDUzIiwibmJmIjoiMjAyNC0wMS0wOFQwMzoxNTozOFoifS8cB5ZbYfX05L9OcR7stgqHZN-ZAPOV7crpZYDUek1bLWsNtfRMc1oaMAgaMGztdsSrOmu0z8wKvnb5prelzAk"
 	otp, _ := module.OtpGenerate()
 	var expiredAt = module.GenerateExpiredAt()
 	var doc model.Otp
@@ -292,13 +292,12 @@ func TestSendOTP(t *testing.T) {
 	doc.ExpiredAt = expiredAt
 	fmt.Println(otp)
 	fmt.Println(expiredAt)
-	otp, err := module.SendOTP(db, "dito@gmail.com", TOKENWA)
+	otp, err := module.SendOTP(db, "dito@gmail.com")
 	if err != nil {
 		fmt.Println("Error sending otp: ", err)
 	} else {
 		fmt.Println("Data berhasil dikirim :", otp)
 	}
-
 }
 
 func TestCekOTP(t *testing.T) {

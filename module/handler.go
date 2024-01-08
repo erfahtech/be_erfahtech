@@ -511,7 +511,7 @@ func GCFDeleteAllHistory (PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collec
 
 //otp
 
-func GCFHandlerSendOTP(MONGOCONNSTRINGENV,TOKENWA, dbname, collectionname string, r *http.Request) string {
+func GCFHandlerSendOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.Response
 	Response.Status = false
@@ -521,7 +521,7 @@ func GCFHandlerSendOTP(MONGOCONNSTRINGENV,TOKENWA, dbname, collectionname string
 		Response.Message = "error parsing application/json: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	_, err = SendOTP(conn, dataUser.Email, TOKENWA)
+	_, err = SendOTP(conn, dataUser.Email)
 	if err != nil {
 		Response.Message = err.Error()
 		return GCFReturnStruct(Response)
