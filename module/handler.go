@@ -172,11 +172,6 @@ func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *h
 // 		response.Message = err.Error()
 // 		return GCFReturnStruct(response)
 // 	}
-// 	id := GetID(r)
-// 	if id == "" {
-// 		response.Message = "Wrong parameter"
-// 		return GCFReturnStruct(response)
-// 	}
 
 // 	data, err := InsertDevice(user.Id, conn, dataDevice)
 // 	if err != nil {
@@ -516,7 +511,7 @@ func GCFDeleteAllHistory (PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collec
 
 //otp
 
-func GCFHandlerSendOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+func GCFHandlerSendOTP(MONGOCONNSTRINGENV,TOKENWA, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.Response
 	Response.Status = false
@@ -526,7 +521,7 @@ func GCFHandlerSendOTP(MONGOCONNSTRINGENV, dbname, collectionname string, r *htt
 		Response.Message = "error parsing application/json: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	_, err = SendOTP(conn, dataUser.Email)
+	_, err = SendOTP(conn, dataUser.Email, TOKENWA)
 	if err != nil {
 		Response.Message = err.Error()
 		return GCFReturnStruct(Response)

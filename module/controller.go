@@ -493,7 +493,7 @@ func GenerateExpiredAt() int64 {
 	return newTime.Unix()
 }
 
-func SendOTP(db *mongo.Database, email string) (string, error) {
+func SendOTP(db *mongo.Database, email, TOKENWA string) (string, error) {
 	// GET OTP
 	otp, _ := OtpGenerate()
 
@@ -563,7 +563,7 @@ func SendOTP(db *mongo.Database, email string) (string, error) {
 
 	// Menambahkan header ke permintaan
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDIzLTEyLTIyVDE0OjQzOjUzKzA3OjAwIiwiaWF0IjoiMjAyMy0xMS0yMlQxNDo0Mzo1MyswNzowMCIsImlkIjoiNjI4NTE2MTk5MjA1MyIsIm5iZiI6IjIwMjMtMTEtMjJUMTQ6NDM6NTMrMDc6MDAifYnf6Vf8-q6QpR20Pso6RWvhq50jonNOV_ucf9-ppSLCem6BDSjdjymp1bQjw81eZlrV0VzKd0arb-0YSl0EiAE")
+	req.Header.Set("Token", TOKENWA)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Melakukan permintaan HTTP POST
