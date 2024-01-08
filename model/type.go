@@ -19,7 +19,7 @@ type Device struct {
 	ID    primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name  string             `json:"name" bson:"name"`
 	Topic string             `json:"topic" bson:"topic"`
-	User  User             `json:"user" bson:"user"`
+	User  string             `json:"user" bson:"user"`
 	Status bool			     `json:"status" bson:"status"`
 }
 

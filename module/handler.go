@@ -131,68 +131,68 @@ func GCFGetUserByEmail(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectio
 	return GCFReturnStruct(user)
 }
 
-//Device
+// Device
 
-// func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
-// 	var Response model.Credential
-// 	var devicedata model.Device
-// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-// 	token := r.Header.Get("Authorization")
-// 	token = strings.TrimPrefix(token, "Bearer ")
-// 	err := json.NewDecoder(r.Body).Decode(&devicedata)
-// 	if err != nil {
-// 		Response.Message = "error parsing application/json: " + err.Error()
-// 		return GCFReturnStruct(Response)
-// 	}
-
-// 	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
-// 	    if err != nil {
-//         Response.Message = "Error decoding token: " + err.Error()
-//         return GCFReturnStruct(Response)
-//     }
-
-// 	devicedata.User = user.Id
-// 	devicedata.Status = false
-// 	InsertOneDoc(conn, "devices", devicedata)
-// 	Response.Status = true
-// 	Response.Message = "Device berhasil ditambahkan dengan nama: " + devicedata.Name
-// 	return GCFReturnStruct(Response)
-// }
-
-func GCFPostDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+func GCFInsertDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+	var Response model.Credential
+	var devicedata model.Device
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var response model.Response
-	var dataDevice model.Device
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
-	response.Status = false
-	//
-	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	err := json.NewDecoder(r.Body).Decode(&devicedata)
 	if err != nil {
-		response.Message = err.Error()
-		return GCFReturnStruct(response)
-	}
-	id := GetID(r)
-	if id == "" {
-		response.Message = "Wrong parameter"
-		return GCFReturnStruct(response)
+		Response.Message = "error parsing application/json: " + err.Error()
+		return GCFReturnStruct(Response)
 	}
 
-	data, err := InsertDevice(user.Id, conn, dataDevice)
-	if err != nil {
-		response.Message = err.Error()
-		return GCFReturnStruct(response)
-	}
-	//
-	response.Status = true
-	response.Message = "Berhasil Menambahkan Device"
-	responData := bson.M{
-		"status":  response.Status,
-		"message": response.Message,
-		"data":    data,
-	}
-	return GCFReturnStruct(responData)
+	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+	    if err != nil {
+        Response.Message = "Error decoding token: " + err.Error()
+        return GCFReturnStruct(Response)
+    }
+
+	devicedata.User = user.Id
+	devicedata.Status = false
+	InsertOneDoc(conn, "devices", devicedata)
+	Response.Status = true
+	Response.Message = "Device berhasil ditambahkan dengan nama: " + devicedata.Name
+	return GCFReturnStruct(Response)
 }
+
+// func GCFPostDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+// 	var response model.Response
+// 	var dataDevice model.Device
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	response.Status = false
+// 	//
+// 	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+// 	if err != nil {
+// 		response.Message = err.Error()
+// 		return GCFReturnStruct(response)
+// 	}
+// 	id := GetID(r)
+// 	if id == "" {
+// 		response.Message = "Wrong parameter"
+// 		return GCFReturnStruct(response)
+// 	}
+
+// 	data, err := InsertDevice(user.Id, conn, dataDevice)
+// 	if err != nil {
+// 		response.Message = err.Error()
+// 		return GCFReturnStruct(response)
+// 	}
+// 	//
+// 	response.Status = true
+// 	response.Message = "Berhasil Menambahkan Device"
+// 	responData := bson.M{
+// 		"status":  response.Status,
+// 		"message": response.Message,
+// 		"data":    data,
+// 	}
+// 	return GCFReturnStruct(responData)
+// }
 
 func GCFGetDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	var Response model.DeviceResponse
@@ -239,98 +239,98 @@ func GCFGetDeviceByEmail(MONGOCONNSTRINGENV, dbname, collectionname string, r *h
 	return GCFReturnStruct(devices)
 }
 
-// func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-// 	var Response model.Response
-// 	Response.Status = false
-// 	var dataDevice model.Device
-
-// 	// Get the "id" parameter from the URL
-// 	id := GetID(r)
-//     if id == "" {
-//         Response.Message = "Missing 'id' parameter in the URL"
-//         GCFReturnStruct(Response)
-//     }
-
-// 	// Convert the ID string to primitive.ObjectID
-// 	idparam, err := primitive.ObjectIDFromHex(id)
-// 	if err != nil {
-// 		Response.Message = "Invalid id parameter"
-// 		GCFReturnStruct(Response)
-// 	}
-
-// 	// get token from header
-// 	token := r.Header.Get("Authorization")
-// 	token = strings.TrimPrefix(token, "Bearer ")
-// 	if token == "" {
-// 		Response.Message = "error parsing application/json1:"
-// 		return GCFReturnStruct(Response)
-// 	}
-
-// 	// decode token
-// 	user, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
-
-// 	if err1 != nil {
-// 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-// 		return GCFReturnStruct(Response)
-// 	}
-
-// 	// Set the user ID in dataDevice
-// 	dataDevice.User = user.Id // Assuming "UserID" is the field where you want to store the user ID in dataDevice
-
-// 	err = json.NewDecoder(r.Body).Decode(&dataDevice)
-// 	if err != nil {
-// 		Response.Message = "error parsing application/json3: " + err.Error()
-// 		return GCFReturnStruct(Response)
-// 	}
-// 	err = UpdateDeviceByID(idparam, conn, dataDevice)
-// 	if err != nil {
-// 		Response.Message = "error parsing application/json4: " + err.Error()
-// 		return GCFReturnStruct(Response)
-// 	}
-// 	Response.Status = true
-// 	Response.Message = "Device berhasil diupdate"
-// 	return GCFReturnStruct(Response)
-// }
-
-func GCFEditDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+func GCFHandlerUpdateDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var response model.Response
+	var Response model.Response
+	Response.Status = false
 	var dataDevice model.Device
-	token := r.Header.Get("Authorization")
-	token = strings.TrimPrefix(token, "Bearer ")
-	response.Status = false
-	//
-	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
-	if err != nil {
-		response.Message = err.Error()
-		return GCFReturnStruct(response)
-	}
+
+	// Get the "id" parameter from the URL
 	id := GetID(r)
-	if id == "" {
-		response.Message = "Wrong parameter"
-		return GCFReturnStruct(response)
-	}
+    if id == "" {
+        Response.Message = "Missing 'id' parameter in the URL"
+        GCFReturnStruct(Response)
+    }
+
+	// Convert the ID string to primitive.ObjectID
 	idparam, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		response.Message = "Invalid id parameter"
-		return GCFReturnStruct(response)
+		Response.Message = "Invalid id parameter"
+		GCFReturnStruct(Response)
 	}
-	data, err := EditDevice( idparam, user.Id, conn, dataDevice)
+
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:"
+		return GCFReturnStruct(Response)
+	}
+
+	// decode token
+	user, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+		return GCFReturnStruct(Response)
+	}
+
+	// Set the user ID in dataDevice
+	dataDevice.User = user.Id // Assuming "UserID" is the field where you want to store the user ID in dataDevice
+
+	err = json.NewDecoder(r.Body).Decode(&dataDevice)
 	if err != nil {
-		response.Message = err.Error()
-		return GCFReturnStruct(response)
+		Response.Message = "error parsing application/json3: " + err.Error()
+		return GCFReturnStruct(Response)
 	}
-	//
-	response.Status = true
-	response.Message = "Berhasil mengubah device"
-	responData := bson.M{
-		"status":  response.Status,
-		"message": response.Message,
-		"data":    data,
+	err = UpdateDeviceByID(idparam, conn, dataDevice)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
 	}
-	return GCFReturnStruct(responData)
+	Response.Status = true
+	Response.Message = "Device berhasil diupdate"
+	return GCFReturnStruct(Response)
 }
+
+// func GCFEditDevice(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+// 	var response model.Response
+// 	var dataDevice model.Device
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	response.Status = false
+// 	//
+// 	user, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
+// 	if err != nil {
+// 		response.Message = err.Error()
+// 		return GCFReturnStruct(response)
+// 	}
+// 	id := GetID(r)
+// 	if id == "" {
+// 		response.Message = "Wrong parameter"
+// 		return GCFReturnStruct(response)
+// 	}
+// 	idparam, err := primitive.ObjectIDFromHex(id)
+// 	if err != nil {
+// 		response.Message = "Invalid id parameter"
+// 		return GCFReturnStruct(response)
+// 	}
+// 	data, err := EditDevice( idparam, user.Id, conn, dataDevice)
+// 	if err != nil {
+// 		response.Message = err.Error()
+// 		return GCFReturnStruct(response)
+// 	}
+// 	//
+// 	response.Status = true
+// 	response.Message = "Berhasil mengubah device"
+// 	responData := bson.M{
+// 		"status":  response.Status,
+// 		"message": response.Message,
+// 		"data":    data,
+// 	}
+// 	return GCFReturnStruct(responData)
+// }
 
 func GCFHandlerDeleteDevice(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
